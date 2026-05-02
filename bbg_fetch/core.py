@@ -442,7 +442,7 @@ def fetch_futures_contract_table(ticker: str = "ESA Index",
             n = len(df.index)
             carry = np.full(n, np.nan)
             bid_ask = df[['px_bid', 'px_ask']].to_numpy()
-            is_good = np.logical_and(pd.isna(bid_ask[:, 0])==False, pd.isna(bid_ask[:, 1])==False)
+            is_good = np.logical_and(pd.notna(bid_ask[:, 0]), pd.notna(bid_ask[:, 1]))
             mid_price = np.where(is_good, 0.5*(bid_ask[:, 0]+bid_ask[:, 1]), np.nan)
             an_days_to_mat = df['fut_days_expire'].to_numpy() / 365.0
             for idx in range(n):

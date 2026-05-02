@@ -1,9 +1,8 @@
 """
 Direct blpapi interface for Bloomberg data access.
 
-Replaces xbbg dependency with thin wrappers around blpapi's //blp/refdata service.
-Implements bdp(), bdh(), bds() with DataFrame output contracts matching the xbbg signatures
-used by bbg_fetch.
+Implements bdp(), bdh(), bds() as thin wrappers over blpapi's //blp/refdata
+service, returning DataFrames with stable output contracts used by bbg_fetch.
 
 Install blpapi:
     pip install --index-url=https://blpapi.bloomberg.com/repository/releases/python/simple blpapi
