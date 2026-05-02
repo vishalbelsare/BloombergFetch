@@ -46,24 +46,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-io = [
-    "pyarrow>=14.0.0",
-]
-
-jupyter = [
-    "jupyter>=1.0.0",
-    "notebook>=6.5.0",
-    "jupyterlab>=3.0.0",
-]
-
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
     "ruff>=0.4",
-]
-
-all = [
-    "bbg-fetch[io,jupyter]",
 ]
 
 [project.urls]
