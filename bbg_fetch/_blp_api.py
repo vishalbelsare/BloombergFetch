@@ -9,6 +9,7 @@ Install blpapi:
     pip install --index-url=https://blpapi.bloomberg.com/repository/releases/python/simple blpapi
 """
 
+import atexit
 import logging
 import datetime
 import threading
@@ -43,9 +44,14 @@ def _get_session(host: str = "localhost", port: int = 8194) -> blpapi.Session:
         opts.setServerPort(port)
         session = blpapi.Session(opts)
         if not session.start():
-            raise ConnectionError("Failed to start blpapi session")
+            raise ConnectionError(
+                f"Failed to start blpapi session at {host}:{port}. "
+                "Is the Bloomberg Terminal running and logged in?"
+            )
         if not session.openService(REFDATA_SERVICE):
-            raise ConnectionError(f"Failed to open {REFDATA_SERVICE}")
+            raise ConnectionError(
+                f"Failed to open {REFDATA_SERVICE} on {host}:{port}"
+            )
         _session = session
         return _session
 
@@ -60,6 +66,10 @@ def disconnect() -> None:
             except Exception:
                 pass
             _session = None
+
+
+# Register cleanup so the blpapi session is stopped at interpreter exit.
+atexit.register(disconnect)
 
 
 # ---------------------------------------------------------------------------
@@ -101,7 +111,9 @@ def _element_to_value(elem: blpapi.Element) -> Any:
         if dtype == blpapi.DataType.BOOL:
             return elem.getValueAsBool()
         return elem.getValueAsString()
-    except Exception:
+    except Exception as exc:
+        logger.debug("Failed to convert blpapi element %s (dtype=%s): %s",
+                     elem.name(), dtype, exc)
         return None
 
 
@@ -124,10 +136,16 @@ def _collect_responses(session: blpapi.Session,
     Collects messages from both PARTIAL_RESPONSE and RESPONSE events that
     contain a 'securityData' element (i.e., actual data messages).
     Admin, session-status, and service-status events are silently skipped.
+
+    Raises
+    ------
+    TimeoutError
+        If the event loop times out before a final RESPONSE event arrives.
+        Any partial messages collected so far are attached to the exception
+        as ``exc.partial_messages``.
     """
     messages: List[blpapi.Message] = []
-    done = False
-    while not done:
+    while True:
         ev = session.nextEvent(timeout_ms)
         ev_type = ev.eventType()
 
@@ -136,15 +154,17 @@ def _collect_responses(session: blpapi.Session,
                 if msg.hasElement("securityData"):
                     messages.append(msg)
             if ev_type == blpapi.Event.RESPONSE:
-                done = True
+                return messages
 
         elif ev_type == blpapi.Event.TIMEOUT:
-            logger.warning("blpapi event loop timed out")
-            done = True
+            err = TimeoutError(
+                f"blpapi event loop timed out after {timeout_ms} ms "
+                f"(collected {len(messages)} partial message(s))"
+            )
+            err.partial_messages = messages  # type: ignore[attr-defined]
+            raise err
 
         # else: ADMIN, SESSION_STATUS, SERVICE_STATUS, etc. — skip
-
-    return messages
 
 
 # ---------------------------------------------------------------------------
