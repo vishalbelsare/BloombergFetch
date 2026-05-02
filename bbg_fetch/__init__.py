@@ -1,3 +1,4 @@
+__version__ = "2.0.1"
 
 from bbg_fetch.core import (fetch_field_timeseries_per_tickers,
                              fetch_fields_timeseries_per_ticker,
@@ -15,8 +16,16 @@ from bbg_fetch.core import (fetch_field_timeseries_per_tickers,
                              fetch_index_members_weights,
                              instrument_to_active_ticker,
                              contract_to_instrument,
-                             fetch_issuer_isins_from_bond_isins)
+                             fetch_issuer_isins_from_bond_isins,
+                             FX_DICT,
+                             DEFAULT_START_DATE,
+                             VOLS_START_DATE,
+                             DEFAULT_TENOR_YEARS,
+                             IMPVOL_FIELDS_MNY_30DAY,
+                             IMPVOL_FIELDS_MNY_60DAY,
+                             IMPVOL_FIELDS_MNY_3MTH,
+                             IMPVOL_FIELDS_MNY_6MTH,
+                             IMPVOL_FIELDS_MNY_12M,
+                             IMPVOL_FIELDS_DELTA)
 
 from bbg_fetch._blp_api import bdp, bdh, bds, disconnect
-
-from bbg_fetch.local_tests import run_local_test, LocalTests

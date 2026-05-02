@@ -1,6 +1,6 @@
 # bbg-fetch
 
-**Bloomberg data in DataFrames. No boilerplate. No bloat.**
+**Bloomberg data in DataFrames. No boilerplate.**
 
 `bbg-fetch` gives you clean, production-ready functions for the Bloomberg data you actually need — prices, fundamentals, vol surfaces, futures curves, bond analytics, index constituents — without writing event loops or managing sessions.
 
@@ -15,21 +15,20 @@ prices = fetch_field_timeseries_per_tickers(
 # Returns a clean DataFrame with renamed columns, sorted index, split/div adjusted
 ```
 
-![PyPI](https://img.shields.io/pypi/v/bbg-fetch?style=flat-square)
-![Python](https://img.shields.io/pypi/pyversions/bbg-fetch?style=flat-square)
-![License](https://img.shields.io/github/license/ArturSepp/BloombergFetch.svg?style=flat-square)
+[![PyPI](https://img.shields.io/pypi/v/bbg-fetch?style=flat-square)](https://pypi.org/project/bbg-fetch/)
+[![Python](https://img.shields.io/pypi/pyversions/bbg-fetch?style=flat-square)](https://pypi.org/project/bbg-fetch/)
+[![License](https://img.shields.io/github/license/ArturSepp/BloombergFetch.svg?style=flat-square)](LICENSE.txt)
 [![Downloads](https://pepy.tech/badge/bbg-fetch)](https://pepy.tech/project/bbg-fetch)
-![Stars](https://img.shields.io/github/stars/ArturSepp/BloombergFetch?style=flat-square&logo=github)
+[![Stars](https://img.shields.io/github/stars/ArturSepp/BloombergFetch?style=flat-square&logo=github)](https://github.com/ArturSepp/BloombergFetch)
 
 ---
 
 ## Why bbg-fetch?
 
-### vs. raw blpapi
-
 Writing Bloomberg queries with `blpapi` directly means 40–60 lines of session management, request construction, event-loop iteration, and response parsing — for every single query. You end up writing the same boilerplate wrapper in every project.
 
 **With blpapi:**
+
 ```python
 import blpapi
 
@@ -53,6 +52,7 @@ session.sendRequest(request)
 ```
 
 **With bbg-fetch:**
+
 ```python
 from bbg_fetch import fetch_field_timeseries_per_tickers
 
@@ -65,25 +65,7 @@ prices = fetch_field_timeseries_per_tickers(
 
 Same result. One line.
 
-### vs. xbbg
-
-xbbg is a capable library, but its v1 rewrite introduced a Rust core, `narwhals`, and `pyarrow>=22` as hard dependencies — over 30MB of transitive installs for what most quant teams use: `bdp`, `bdh`, and `bds`.
-
-| | **bbg-fetch** | **xbbg v1** |
-|---|---|---|
-| Dependencies | `numpy` + `pandas` | `narwhals` + `pyarrow` + Rust binary |
-| Install size | ~50KB (plus blpapi) | ~30MB+ transitive |
-| Python support | 3.9–3.12 | 3.10–3.14 |
-| Intraday bars / streaming | No | Yes |
-| Exchange-aware market hours | No | Yes |
-| Session management | Automatic singleton | Configurable pool |
-| Debug Bloomberg errors | Your code, 400 lines | Third-party internals |
-
-**bbg-fetch is for teams that need historical, reference, and bulk data — reliably, with minimal dependencies.** If you need intraday bars or real-time streaming, use xbbg.
-
-### The sweet spot
-
-bbg-fetch sits between raw blpapi (too low-level) and xbbg (too many dependencies). It wraps the three Bloomberg services that cover 95% of quant workflows — BDP, BDH, BDS — into high-level functions that return clean DataFrames with proper column naming, corporate action adjustments, and index alignment.
+bbg-fetch wraps the three Bloomberg services that cover most quant workflows — BDP, BDH, BDS — into high-level functions that return clean DataFrames with proper column naming, corporate action adjustments, and index alignment. The full direct-blpapi shim lives in a single 400-line file (`_blp_api.py`) that you can read end to end.
 
 ---
 
@@ -119,6 +101,7 @@ pip install --index-url=https://blpapi.bloomberg.com/repository/releases/python/
 Pre-built wheels for Python 3.8–3.12 on Windows/macOS/Linux bundle the C++ SDK automatically.
 
 **Corporate proxy?** Download the `.whl` from `https://blpapi.bloomberg.com/repository/releases/python/simple/blpapi/` via browser, then:
+
 ```bash
 pip install /path/to/blpapi-3.24.6-cp312-cp312-win_amd64.whl
 ```
@@ -130,12 +113,13 @@ pip install bbg-fetch
 ```
 
 Or from source:
+
 ```bash
 git clone https://github.com/ArturSepp/BloombergFetch.git
 pip install .
 ```
 
-**Requirements:** Python 3.9+, Bloomberg Terminal running on the same machine.
+**Requirements:** Python 3.9–3.12, Bloomberg Terminal running on the same machine.
 
 ---
 
@@ -229,8 +213,7 @@ credit = fetch_balance_data(
 ### Current market prices
 
 ```python
-from bbg_fetch import fetch_last_prices
-from bbg_fetch.core import FX_DICT
+from bbg_fetch import fetch_last_prices, FX_DICT
 
 # FX rates (uses built-in FX_DICT by default: 19 major pairs)
 fx = fetch_last_prices()
@@ -247,10 +230,10 @@ prices = fetch_last_prices(
 ### Implied volatility surface
 
 ```python
-from bbg_fetch import fetch_vol_timeseries, IMPVOL_FIELDS_DELTA
-from bbg_fetch.core import (IMPVOL_FIELDS_MNY_30DAY, IMPVOL_FIELDS_MNY_60DAY,
-                             IMPVOL_FIELDS_MNY_3MTH, IMPVOL_FIELDS_MNY_6MTH,
-                             IMPVOL_FIELDS_MNY_12M)
+from bbg_fetch import (fetch_vol_timeseries, IMPVOL_FIELDS_DELTA,
+                       IMPVOL_FIELDS_MNY_30DAY, IMPVOL_FIELDS_MNY_60DAY,
+                       IMPVOL_FIELDS_MNY_3MTH, IMPVOL_FIELDS_MNY_6MTH,
+                       IMPVOL_FIELDS_MNY_12M)
 
 # Delta-based vol for FX (1M and 2M, 10Δ to 50Δ puts and calls)
 fx_vol = fetch_vol_timeseries(
@@ -299,6 +282,9 @@ front, second = fetch_active_futures(generic_ticker='ES1 Index')
 
 # Start from second generic (e.g., for roll analysis)
 gen2, gen3 = fetch_active_futures(generic_ticker='ES1 Index', first_gen=2)
+
+# Custom retry budget (default: 3 attempts)
+front, second = fetch_active_futures(generic_ticker='ES1 Index', max_attempts=5)
 ```
 
 ### Futures ticker utilities
@@ -433,7 +419,7 @@ yc_members = bds("YCGT0025 Index", "INDX_MEMBERS")
 yc_data = bdp(yc_members.member_ticker_and_exchange_code.tolist(),
               ['YLD_YTM_ASK', 'SECURITY NAME', 'MATURITY'])
 
-# Clean up session explicitly (optional)
+# Explicitly stop the shared session (also runs at interpreter exit via atexit)
 from bbg_fetch import disconnect
 disconnect()
 ```
@@ -443,53 +429,60 @@ disconnect()
 ## Function reference
 
 ### Price data
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `fetch_field_timeseries_per_tickers()` | One field across multiple tickers (with optional dict-based renaming) |
 | `fetch_fields_timeseries_per_ticker()` | Multiple fields for a single ticker |
 | `fetch_last_prices()` | Snapshot of current prices |
 
 ### Fundamentals
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `fetch_fundamentals()` | Company metadata and fundamentals (dict renaming for tickers and fields) |
 | `fetch_balance_data()` | Balance sheet ratios and credit metrics |
 | `fetch_dividend_history()` | Full dividend history (dates, amounts, types) |
 | `fetch_div_yields()` | Per-ticker dividend amounts and trailing 1-year yield |
 
 ### Derivatives
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `fetch_vol_timeseries()` | Implied vol surface with underlying + rates (supports list-of-dicts for multi-tenor) |
 | `fetch_futures_contract_table()` | Contract specs, carry, timestamps |
-| `fetch_active_futures()` | Front + second month price series |
+| `fetch_active_futures()` | Front + second month price series with retry logic |
 
 ### Fixed income
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `fetch_bonds_info()` | Bond analytics by ISIN (with optional date override) |
 | `fetch_cds_info()` | CDS spread tickers from equity tickers |
 | `fetch_issuer_isins_from_bond_isins()` | Bond ISIN → issuer equity ISIN mapping |
 
 ### Index and resolution
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `fetch_index_members_weights()` | Constituents and weights (configurable BDS field) |
 | `fetch_tickers_from_isins()` | ISIN → Bloomberg composite ticker |
 
 ### Futures utilities
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `instrument_to_active_ticker()` | `'ES1 Index'` + `num=3` → `'ES3 Index'` |
 | `contract_to_instrument()` | `'ES1 Index'` → `'ES'` (strip generic number) |
 
 ### Low-level blpapi wrappers
+
 | Function | Description |
-|----------|-------------|
+| --- | --- |
 | `bdp()` | Bloomberg Data Point — reference data (BDP in Excel) |
 | `bdh()` | Bloomberg Data History — historical end-of-day data |
 | `bds()` | Bloomberg Data Set — bulk data (chains, members, dividends) |
-| `disconnect()` | Explicitly stop the shared blpapi session |
+| `disconnect()` | Explicitly stop the shared blpapi session (also runs at interpreter exit via `atexit`) |
 
 ---
 
@@ -498,7 +491,7 @@ disconnect()
 ### FX currencies
 
 ```python
-from bbg_fetch.core import FX_DICT
+from bbg_fetch import FX_DICT
 # 19 major pairs: EUR, GBP, CHF, CAD, JPY, AUD, NZD, MXN, HKD, SEK,
 #                 PLN, KRW, TRY, SGD, ZAR, CNY, INR, TWD, NOK
 ```
@@ -506,13 +499,15 @@ from bbg_fetch.core import FX_DICT
 ### Implied volatility fields
 
 | Mapping | Description |
-|---------|-------------|
+| --- | --- |
 | `IMPVOL_FIELDS_MNY_30DAY` | 30-day moneyness-based vol (80%–120%) |
 | `IMPVOL_FIELDS_MNY_60DAY` | 60-day moneyness-based vol |
 | `IMPVOL_FIELDS_MNY_3MTH` | 3-month moneyness-based vol |
 | `IMPVOL_FIELDS_MNY_6MTH` | 6-month moneyness-based vol |
 | `IMPVOL_FIELDS_MNY_12M` | 12-month moneyness-based vol |
 | `IMPVOL_FIELDS_DELTA` | 1M/2M delta-based vol (10Δ–50Δ puts and calls) |
+
+All mappings are importable directly from `bbg_fetch`.
 
 ---
 
@@ -521,8 +516,9 @@ from bbg_fetch.core import FX_DICT
 ### Date defaults
 
 ```python
-DEFAULT_START_DATE = pd.Timestamp('01Jan1959')  # Historical data
-VOLS_START_DATE = pd.Timestamp('03Jan2005')     # Volatility data
+from bbg_fetch import DEFAULT_START_DATE, VOLS_START_DATE
+# DEFAULT_START_DATE = pd.Timestamp('01Jan1959')   # Historical data
+# VOLS_START_DATE    = pd.Timestamp('03Jan2005')   # Volatility data
 ```
 
 ### Corporate action adjustments
@@ -530,7 +526,7 @@ VOLS_START_DATE = pd.Timestamp('03Jan2005')     # Volatility data
 Most price functions support Bloomberg's adjustment flags:
 
 | Parameter | Default | Description |
-|-----------|---------|-------------|
+| --- | --- | --- |
 | `CshAdjNormal` | `True` | Normal cash dividends |
 | `CshAdjAbnormal` | `True` | Special dividends |
 | `CapChg` | `True` | Stock splits and capital changes |
@@ -539,10 +535,10 @@ Most price functions support Bloomberg's adjustment flags:
 
 ## Testing
 
-Integration tests require an active Bloomberg Terminal connection:
+Integration tests live in `bbg_fetch/tests/integration_tests.py` and require an active Bloomberg Terminal connection. They are shipped with the package.
 
 ```python
-from bbg_fetch import run_local_test, LocalTests
+from bbg_fetch.tests.integration_tests import run_local_test, LocalTests
 
 run_local_test(LocalTests.FIELD_TIMESERIES_PER_TICKERS)
 run_local_test(LocalTests.IMPLIED_VOL_TIME_SERIES)
@@ -552,7 +548,7 @@ run_local_test(LocalTests.DIVIDEND)
 run_local_test(LocalTests.BOND_MEMBERS)
 ```
 
-Available tests: `FIELD_TIMESERIES_PER_TICKERS`, `FIELDS_TIMESERIES_PER_TICKER`, `FUNDAMENTALS`, `ACTIVE_FUTURES`, `CONTRACT_TABLE`, `IMPLIED_VOL_TIME_SERIES`, `BOND_INFO`, `LAST_PRICES`, `CDS_INFO`, `BALANCE_DATA`, `TICKERS_FROM_ISIN`, `DIVIDEND`, `BOND_MEMBERS`, `INDEX_MEMBERS`, `OPTION_CHAIN`, `YIELD_CURVE`, `CHECK`, `MEMBERS`.
+Available tests: `FIELD_TIMESERIES_PER_TICKERS`, `FIELDS_TIMESERIES_PER_TICKER`, `FUNDAMENTALS`, `ACTIVE_FUTURES`, `CONTRACT_TABLE`, `IMPLIED_VOL_TIME_SERIES`, `BOND_INFO`, `LAST_PRICES`, `CDS_INFO`, `BALANCE_DATA`, `TICKERS_FROM_ISIN`, `DIVIDEND`, `BOND_MEMBERS`, `INDEX_MEMBERS`, `OPTION_CHAIN`, `YIELD_CURVE`, `CHECK`, `MEMBERS`, `FORWARD`.
 
 ---
 
@@ -561,41 +557,60 @@ Available tests: `FIELD_TIMESERIES_PER_TICKERS`, `FIELDS_TIMESERIES_PER_TICKER`,
 ```
 bbg_fetch/
     __init__.py       # Public API
-    _blp_api.py       # Direct blpapi shim (bdp, bdh, bds) — 400 lines, zero dependencies
+    _blp_api.py       # Direct blpapi shim (bdp, bdh, bds) — single file, no third-party deps
     core.py           # High-level fetch functions
-    local_tests.py    # Integration tests (requires Bloomberg Terminal)
+    tests/
+        integration_tests.py    # Tests requiring Bloomberg Terminal
+        bbg_adj_price_vs_tri.py # Adjusted-price vs total-return validation
 ```
 
 ## Troubleshooting
 
 ### "No module named blpapi"
+
 Install from Bloomberg's package index — see Installation above.
 
 ### "UnboundLocalError: cannot access local variable 'toPy'"
+
 The C++ DLLs bundled with blpapi failed to load. Reinstall: `pip uninstall blpapi -y` then reinstall. If on Python 3.13+, downgrade to 3.12.
 
 ### Corporate proxy blocks Bloomberg's pip index
+
 Download the `.whl` file manually from `https://blpapi.bloomberg.com/repository/releases/python/simple/blpapi/` via browser and install locally with `pip install /path/to/blpapi-*.whl`.
 
 ### Empty DataFrames returned
+
 Ensure the Bloomberg Terminal is running (blpapi connects to `localhost:8194`). Verify field names using Bloomberg's `FLDS` function and instrument formatting (e.g., `"AAPL US Equity"`, `"ES1 Index"`, `"EURUSD Curncy"`). Some indices support `INDX_MWEIGHT` (with weights) while others only support `INDX_MEMBERS` — use the `field` parameter in `fetch_index_members_weights()` accordingly.
 
 ### "No module named pip" in venv
+
 Bootstrap pip first: `python -m ensurepip --upgrade`, then install.
 
 ### PowerShell path errors
+
 Use `.\` prefix for relative paths: `.\.venv\Scripts\python.exe`, not `.venv\Scripts\python.exe`.
 
 ---
 
+## What's new in v2.0.1
+
+- **Fixed frozen `end_date` defaults.** `fetch_field_timeseries_per_tickers` and `fetch_fields_timeseries_per_ticker` evaluated `pd.Timestamp.now()` once at import time. Long-running processes now resolve the timestamp at call time.
+- **Fixed missing `sort_index` assignment** in `fetch_fields_timeseries_per_ticker`.
+- **Robust retry loop** in `fetch_active_futures` — `max_attempts` parameter, no more crashes when all attempts fail.
+- **Tighter exception handling** — replaced bare `except:` with specific exception types.
+- **`disconnect()` registered with `atexit`** for clean session teardown at interpreter exit.
+- **`_collect_responses` raises `TimeoutError`** instead of silently swallowing timeouts; partial messages collected so far are attached to the exception.
+- **Public constants exported from `bbg_fetch`** — `FX_DICT`, `IMPVOL_FIELDS_*`, `DEFAULT_START_DATE`, `VOLS_START_DATE`, `DEFAULT_TENOR_YEARS` are now importable from the top-level package.
+- **`bbg_fetch.__version__`** added.
+- **Mutable default arguments** (lists) replaced with tuples; signatures use `Sequence[str]` consistently.
+
 ## What's new in v2.0.0
 
-- **`xbbg` dependency removed** — direct `blpapi` interface, no transitive Rust/pyarrow/narwhals
+- **Direct `blpapi` interface** — bbg-fetch talks to blpapi via a single in-repo 400-line shim (`_blp_api.py`); no third-party Bloomberg wrapper required as a dependency
 - **`field` parameter** added to `fetch_index_members_weights()` — supports `INDX_MWEIGHT`, `INDX_MEMBERS`, `INDX_MEMBERS3`
-- **Test code extracted** to `local_tests.py` with `run_local_test()` (renamed from `run_unit_test`)
 - **`bdp()`, `bdh()`, `bds()` exported** for direct low-level access
 - **Robust field name handling** — Bloomberg's inconsistent casing/spacing/hyphens normalized automatically
-- **Migration from v1.x:** replace `run_unit_test` → `run_local_test`, all other imports unchanged
+- **Migration from v1.x:** all imports unchanged
 
 ## License
 
@@ -610,6 +625,6 @@ MIT. See [LICENSE.txt](LICENSE.txt).
   year = {2024},
   publisher = {GitHub},
   url = {https://github.com/ArturSepp/BloombergFetch},
-  version = {2.0.0}
+  version = {2.0.1}
 }
 ```

@@ -223,7 +223,6 @@ def run_local_test(local_test: LocalTests) -> None:
         print(df)
 
     elif local_test == LocalTests.FORWARD:
-
         pass
 
 
@@ -234,5 +233,4 @@ if __name__ == '__main__':
     #for local_test in LocalTests:
     #    print(local_test)
     #    run_local_test(local_test=local_test)
-    run_local_test(local_test=LocalTests.IMPLIED_VOL_TIME_SERIES)
-
+    run_local_test(local_test=LocalTests.FIELD_TIMESERIES_PER_TICKERS)
