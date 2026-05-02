@@ -67,8 +67,6 @@ Same result. One line.
 
 bbg-fetch wraps the three Bloomberg services that cover most quant workflows — BDP, BDH, BDS — into high-level functions that return clean DataFrames with proper column naming, corporate action adjustments, and index alignment. The full direct-blpapi shim lives in a single 400-line file (`_blp_api.py`) that you can read end to end.
 
-bbg-fetch is built for historical, reference, and bulk data. If you need intraday bars, real-time streaming, or exchange-aware sessions, look at [xbbg](https://github.com/alpha-xone/xbbg).
-
 ---
 
 ## What you get
@@ -608,7 +606,7 @@ Use `.\` prefix for relative paths: `.\.venv\Scripts\python.exe`, not `.venv\Scr
 
 ## What's new in v2.0.0
 
-- **Direct `blpapi` interface** — `xbbg` removed as a dependency; bbg-fetch now talks to blpapi via a single in-repo 400-line shim (`_blp_api.py`)
+- **Direct `blpapi` interface** — bbg-fetch talks to blpapi via a single in-repo 400-line shim (`_blp_api.py`); no third-party Bloomberg wrapper required as a dependency
 - **`field` parameter** added to `fetch_index_members_weights()` — supports `INDX_MWEIGHT`, `INDX_MEMBERS`, `INDX_MEMBERS3`
 - **`bdp()`, `bdh()`, `bds()` exported** for direct low-level access
 - **Robust field name handling** — Bloomberg's inconsistent casing/spacing/hyphens normalized automatically
